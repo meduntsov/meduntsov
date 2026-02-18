@@ -57,6 +57,43 @@ cd src/infra
 docker compose up --build
 ```
 
+### Docker Hub timeout troubleshooting
+If you see:
+
+`Error response from daemon: Get "https://registry-1.docker.io/v2/": context deadline exceeded`
+
+it usually means your Docker daemon cannot reach Docker Hub in time. Try:
+
+1. Verify network and DNS from the host:
+   ```bash
+   nslookup registry-1.docker.io
+   curl -I https://registry-1.docker.io/v2/
+   ```
+2. Restart Docker and retry:
+   ```bash
+   sudo systemctl restart docker
+   docker pull hello-world
+   ```
+3. Configure Docker daemon DNS and increase pull resilience in `/etc/docker/daemon.json`:
+   ```json
+   {
+     "dns": ["8.8.8.8", "1.1.1.1"],
+     "max-concurrent-downloads": 1
+   }
+   ```
+   Then restart Docker:
+   ```bash
+   sudo systemctl restart docker
+   ```
+4. If you're behind a corporate proxy/firewall, configure Docker proxy settings and allow access to `registry-1.docker.io`.
+
+After these steps, run:
+```bash
+cd src/infra
+docker compose pull
+docker compose up --build
+```
+
 Backend Swagger: `http://localhost:8080/swagger`
 Frontend: `http://localhost:5173`
 
